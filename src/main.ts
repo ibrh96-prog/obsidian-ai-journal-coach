@@ -1,4 +1,4 @@
-import { Plugin, Notice } from "obsidian";
+import { Plugin } from "obsidian";
 import { AIJournalCoachSettings, DEFAULT_SETTINGS } from "./settings";
 import { AIJournalCoachSettingTab } from "./settingsTab";
 import { AnalysisModal } from "./analysisModal";
@@ -11,12 +11,10 @@ export default class AIJournalCoachPlugin extends Plugin {
 
 		this.addSettingTab(new AIJournalCoachSettingTab(this.app, this));
 
-		// Ribbon icon
 		this.addRibbonIcon("book-open", "AI Journal Coach", () => {
 			new AnalysisModal(this.app, this).open();
 		});
 
-		// Command palette
 		this.addCommand({
 			id: "open-journal-coach",
 			name: "Open AI Journal Coach",
