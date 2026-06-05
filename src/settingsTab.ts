@@ -15,10 +15,10 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		new Setting(containerEl).setName("AI Journal Coach").setHeading();
+		new Setting(containerEl).setName("General").setHeading();
 
 		// --- Journal Settings ---
-		new Setting(containerEl).setName("Journal Settings").setHeading();
+		new Setting(containerEl).setName("Journal").setHeading();
 
 		new Setting(containerEl)
 			.setName("Journal folder")
