@@ -77,7 +77,7 @@ export class AnalysisModal extends Modal {
 			card.addEventListener("click", () => {
 				this.selectedMode = mode.value;
 				modeContainer.querySelectorAll(".aj-mode-card").forEach((el) => {
-					el.removeClass("aj-mode-card--selected");
+					(el as HTMLElement).removeClass("aj-mode-card--selected");
 				});
 				card.addClass("aj-mode-card--selected");
 			});

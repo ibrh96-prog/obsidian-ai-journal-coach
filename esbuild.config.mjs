@@ -1,8 +1,15 @@
 import esbuild from "esbuild";
-import builtins from "builtin-modules";
 import { copyFileSync } from "fs";
 
 const prod = process.argv[2] === "production";
+
+const builtins = [
+  "assert", "buffer", "child_process", "cluster", "console", "constants",
+  "crypto", "dgram", "dns", "domain", "events", "fs", "http", "https",
+  "module", "net", "os", "path", "punycode", "querystring", "readline",
+  "repl", "stream", "string_decoder", "sys", "timers", "tls", "tty",
+  "url", "util", "vm", "zlib", "perf_hooks", "worker_threads",
+];
 
 const context = await esbuild.context({
   banner: { js: "/* AI Journal Coach — Obsidian Plugin */" },
