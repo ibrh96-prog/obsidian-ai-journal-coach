@@ -1,5 +1,6 @@
 import { App, PluginSettingTab, Setting, Notice } from "obsidian";
 import AIJournalCoachPlugin from "./main";
+import { AIJournalCoachSettings } from "./settings";
 
 export class AIJournalCoachSettingTab extends PluginSettingTab {
 	plugin: AIJournalCoachPlugin;
@@ -13,11 +14,45 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: "AI Journal Coach Settings" });
+		containerEl.createEl("h2", { text: "AI Journal Coach" });
+
+		// --- Journal Folder ---
+		containerEl.createEl("h3", { text: "Journal Settings" });
+
+		new Setting(containerEl)
+			.setName("Journal folder")
+			.setDesc("Folder containing your journal notes. Leave empty to search entire vault.")
+			.addText((text) =>
+				text
+					.setPlaceholder("e.g. Journal or Daily Notes")
+					.setValue(this.plugin.settings.journalFolder)
+					.onChange(async (value) => {
+						this.plugin.settings.journalFolder = value.trim();
+						await this.plugin.saveSettings();
+					})
+			);
+
+		new Setting(containerEl)
+			.setName("Days to analyze")
+			.setDesc("How many days back to include in analysis.")
+			.addDropdown((drop) =>
+				drop
+					.addOption("7", "Last 7 days")
+					.addOption("14", "Last 14 days")
+					.addOption("30", "Last 30 days")
+					.addOption("90", "Last 90 days")
+					.setValue(String(this.plugin.settings.daysBack))
+					.onChange(async (value) => {
+						this.plugin.settings.daysBack = parseInt(value);
+						await this.plugin.saveSettings();
+					})
+			);
 
 		// --- Provider ---
+		containerEl.createEl("h3", { text: "AI Provider" });
+
 		new Setting(containerEl)
-			.setName("AI Provider")
+			.setName("Provider")
 			.setDesc("Select your LLM provider.")
 			.addDropdown((drop) =>
 				drop
@@ -33,9 +68,8 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 					})
 			);
 
-		// --- API Key ---
 		new Setting(containerEl)
-			.setName("API Key")
+			.setName("API key")
 			.setDesc("Your API key for the selected provider.")
 			.addText((text) =>
 				text
@@ -47,7 +81,6 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 					})
 			);
 
-		// --- Model ---
 		new Setting(containerEl)
 			.setName("Model")
 			.setDesc("Model ID to use for analysis.")
@@ -61,10 +94,12 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 					})
 			);
 
-		// --- Custom Base URL ---
-		if (this.plugin.settings.provider === "custom" || this.plugin.settings.provider === "openrouter") {
+		if (
+			this.plugin.settings.provider === "custom" ||
+			this.plugin.settings.provider === "openrouter"
+		) {
 			new Setting(containerEl)
-				.setName("Custom Base URL")
+				.setName("Custom base URL")
 				.setDesc("Base URL for OpenAI-compatible endpoint.")
 				.addText((text) =>
 					text
@@ -81,7 +116,7 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 		containerEl.createEl("h3", { text: "Pro License" });
 
 		new Setting(containerEl)
-			.setName("License Key")
+			.setName("License key")
 			.setDesc("Enter your Pro license key to unlock unlimited usage.")
 			.addText((text) =>
 				text
@@ -102,6 +137,8 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 			);
 
 		// --- Status ---
+		containerEl.createEl("h3", { text: "Usage" });
+
 		const status = this.plugin.settings.isProActivated
 			? "✅ Pro activated — unlimited usage"
 			: `Free tier — ${this.plugin.settings.usageCount} / 3 uses this month`;
@@ -109,6 +146,3 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 		containerEl.createEl("p", { text: status });
 	}
 }
-
-// Re-export type for use in this file
-import { AIJournalCoachSettings } from "./settings";

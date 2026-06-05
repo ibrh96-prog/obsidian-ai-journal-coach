@@ -1,19 +1,35 @@
 import { Plugin, Notice } from "obsidian";
 import { AIJournalCoachSettings, DEFAULT_SETTINGS } from "./settings";
 import { AIJournalCoachSettingTab } from "./settingsTab";
+import { AnalysisModal } from "./analysisModal";
 
 export default class AIJournalCoachPlugin extends Plugin {
 	settings: AIJournalCoachSettings;
 
 	async onload() {
 		await this.loadSettings();
+
 		this.addSettingTab(new AIJournalCoachSettingTab(this.app, this));
-		new Notice("AI Journal Coach loaded.");
-		console.log("AI Journal Coach plugin loaded.");
+
+		// Ribbon icon
+		this.addRibbonIcon("book-open", "AI Journal Coach", () => {
+			new AnalysisModal(this.app, this).open();
+		});
+
+		// Command palette
+		this.addCommand({
+			id: "open-journal-coach",
+			name: "Open AI Journal Coach",
+			callback: () => {
+				new AnalysisModal(this.app, this).open();
+			},
+		});
+
+		console.log("AI Journal Coach loaded.");
 	}
 
 	async onunload() {
-		console.log("AI Journal Coach plugin unloaded.");
+		console.log("AI Journal Coach unloaded.");
 	}
 
 	async loadSettings() {

@@ -7,6 +7,8 @@ export interface AIJournalCoachSettings {
 	isProActivated: boolean;
 	usageCount: number;
 	usageResetMonth: number;
+	journalFolder: string;
+	daysBack: number;
 }
 
 export const DEFAULT_SETTINGS: AIJournalCoachSettings = {
@@ -18,4 +20,6 @@ export const DEFAULT_SETTINGS: AIJournalCoachSettings = {
 	isProActivated: false,
 	usageCount: 0,
 	usageResetMonth: new Date().getMonth(),
+	journalFolder: "",
+	daysBack: 7,
 };
