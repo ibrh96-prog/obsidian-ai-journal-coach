@@ -15,10 +15,10 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 		const { containerEl } = this;
 		containerEl.empty();
 
-		containerEl.createEl("h2", { text: "AI Journal Coach" });
+		new Setting(containerEl).setName("AI Journal Coach").setHeading();
 
 		// --- Journal Settings ---
-		containerEl.createEl("h3", { text: "Journal Settings" });
+		new Setting(containerEl).setName("Journal Settings").setHeading();
 
 		new Setting(containerEl)
 			.setName("Journal folder")
@@ -50,7 +50,7 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 			);
 
 		// --- AI Provider ---
-		containerEl.createEl("h3", { text: "AI Provider" });
+		new Setting(containerEl).setName("AI Provider").setHeading();
 
 		new Setting(containerEl)
 			.setName("Provider")
@@ -114,7 +114,7 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 		}
 
 		// --- Pro License ---
-		containerEl.createEl("h3", { text: "Pro License" });
+		new Setting(containerEl).setName("Pro License").setHeading();
 
 		new Setting(containerEl)
 			.setName("License key")
@@ -148,12 +148,12 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 			);
 
 		// --- Usage Status ---
-		containerEl.createEl("h3", { text: "Usage" });
+		new Setting(containerEl).setName("Usage").setHeading();
 
 		const status = this.plugin.settings.isProActivated
 			? "✅ Pro activated — unlimited usage"
 			: `Free tier — ${this.plugin.settings.usageCount} / 3 uses this month`;
 
-		containerEl.createEl("p", { text: status });
+		new Setting(containerEl).setName(status);
 	}
 }

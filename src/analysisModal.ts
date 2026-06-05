@@ -29,19 +29,23 @@ export class AnalysisModal extends Modal {
 	plugin: AIJournalCoachPlugin;
 	selectedMode: AnalysisMode = "weekly-reflection";
 	isLoading = false;
+	private component: Component;
 
 	constructor(app: App, plugin: AIJournalCoachPlugin) {
 		super(app);
 		this.plugin = plugin;
+		this.component = new Component();
 	}
 
 	onOpen() {
+		this.component.load();
 		const { contentEl } = this;
 		contentEl.empty();
 		this.renderSelector();
 	}
 
 	onClose() {
+		this.component.unload();
 		const { contentEl } = this;
 		contentEl.empty();
 	}
@@ -79,7 +83,6 @@ export class AnalysisModal extends Modal {
 			});
 		});
 
-		// Info
 		const folder = this.plugin.settings.journalFolder || "entire vault";
 		const days = this.plugin.settings.daysBack;
 		contentEl.createEl("p", {
@@ -87,7 +90,6 @@ export class AnalysisModal extends Modal {
 			cls: "setting-item-description",
 		});
 
-		// Run button
 		const btnRow = contentEl.createDiv({ cls: "aj-btn-row" });
 
 		const runBtn = btnRow.createEl("button", {
@@ -95,8 +97,8 @@ export class AnalysisModal extends Modal {
 			cls: "mod-cta",
 		});
 
-		runBtn.addEventListener("click", async () => {
-			await this.runAnalysis();
+		runBtn.addEventListener("click", () => {
+			void this.runAnalysis();
 		});
 	}
 
@@ -149,12 +151,12 @@ export class AnalysisModal extends Modal {
 
 		const resultContainer = contentEl.createDiv({ cls: "aj-result" });
 
-		MarkdownRenderer.render(
+		void MarkdownRenderer.render(
 			this.app,
 			output,
 			resultContainer,
 			"",
-			new Component()
+			this.component
 		);
 
 		const btnRow = contentEl.createDiv({ cls: "aj-btn-row" });
@@ -163,8 +165,8 @@ export class AnalysisModal extends Modal {
 			text: "Save to vault",
 			cls: "mod-cta",
 		});
-		saveBtn.addEventListener("click", async () => {
-			await this.saveResultToVault(output);
+		saveBtn.addEventListener("click", () => {
+			void this.saveResultToVault(output);
 		});
 
 		const backBtn = btnRow.createEl("button", { text: "← New analysis" });

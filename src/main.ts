@@ -17,7 +17,7 @@ export default class AIJournalCoachPlugin extends Plugin {
 
 		this.addCommand({
 			id: "open-journal-coach",
-			name: "Open AI Journal Coach",
+			name: "Open",
 			callback: () => {
 				new AnalysisModal(this.app, this).open();
 			},

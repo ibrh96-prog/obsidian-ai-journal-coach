@@ -2260,7 +2260,7 @@ __export(main_exports, {
   default: () => AIJournalCoachPlugin
 });
 module.exports = __toCommonJS(main_exports);
-var import_obsidian3 = require("obsidian");
+var import_obsidian4 = require("obsidian");
 
 // src/settings.ts
 var DEFAULT_SETTINGS = {
@@ -2333,8 +2333,8 @@ var AIJournalCoachSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    containerEl.createEl("h2", { text: "AI Journal Coach" });
-    containerEl.createEl("h3", { text: "Journal Settings" });
+    new import_obsidian.Setting(containerEl).setName("AI Journal Coach").setHeading();
+    new import_obsidian.Setting(containerEl).setName("Journal Settings").setHeading();
     new import_obsidian.Setting(containerEl).setName("Journal folder").setDesc("Folder containing your journal notes. Leave empty to search entire vault.").addText(
       (text) => text.setPlaceholder("e.g. Journal or Daily Notes").setValue(this.plugin.settings.journalFolder).onChange(async (value) => {
         this.plugin.settings.journalFolder = value.trim();
@@ -2347,7 +2347,7 @@ var AIJournalCoachSettingTab = class extends import_obsidian.PluginSettingTab {
         await this.plugin.saveSettings();
       })
     );
-    containerEl.createEl("h3", { text: "AI Provider" });
+    new import_obsidian.Setting(containerEl).setName("AI Provider").setHeading();
     new import_obsidian.Setting(containerEl).setName("Provider").setDesc("Select your LLM provider.").addDropdown(
       (drop) => drop.addOption("anthropic", "Anthropic (Claude)").addOption("openai", "OpenAI").addOption("openrouter", "OpenRouter").addOption("custom", "Custom (OpenAI-compatible)").setValue(this.plugin.settings.provider).onChange(async (value) => {
         this.plugin.settings.provider = value;
@@ -2375,7 +2375,7 @@ var AIJournalCoachSettingTab = class extends import_obsidian.PluginSettingTab {
         })
       );
     }
-    containerEl.createEl("h3", { text: "Pro License" });
+    new import_obsidian.Setting(containerEl).setName("Pro License").setHeading();
     new import_obsidian.Setting(containerEl).setName("License key").setDesc("Enter your Pro license key to unlock unlimited usage.").addText(
       (text) => text.setPlaceholder("Paste your license key here").setValue(this.plugin.settings.licenseKey).onChange(async (value) => {
         this.plugin.settings.licenseKey = value.trim();
@@ -2396,16 +2396,17 @@ var AIJournalCoachSettingTab = class extends import_obsidian.PluginSettingTab {
         }
       })
     );
-    containerEl.createEl("h3", { text: "Usage" });
+    new import_obsidian.Setting(containerEl).setName("Usage").setHeading();
     const status = this.plugin.settings.isProActivated ? "\u2705 Pro activated \u2014 unlimited usage" : `Free tier \u2014 ${this.plugin.settings.usageCount} / 3 uses this month`;
-    containerEl.createEl("p", { text: status });
+    new import_obsidian.Setting(containerEl).setName(status);
   }
 };
 
 // src/analysisModal.ts
-var import_obsidian2 = require("obsidian");
+var import_obsidian3 = require("obsidian");
 
 // src/llmAdapter.ts
+var import_obsidian2 = require("obsidian");
 async function callLLM(prompt, systemPrompt, settings) {
   if (!settings.apiKey) {
     return { content: "", error: "No API key configured. Please add your API key in settings." };
@@ -2422,7 +2423,8 @@ async function callLLM(prompt, systemPrompt, settings) {
 }
 async function callAnthropic(prompt, systemPrompt, settings) {
   var _a, _b, _c;
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
+  const response = await (0, import_obsidian2.requestUrl)({
+    url: "https://api.anthropic.com/v1/messages",
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -2436,11 +2438,10 @@ async function callAnthropic(prompt, systemPrompt, settings) {
       messages: [{ role: "user", content: prompt }]
     })
   });
-  if (!response.ok) {
-    const err = await response.text();
-    return { content: "", error: `Anthropic error: ${response.status} \u2014 ${err}` };
+  if (response.status !== 200) {
+    return { content: "", error: `Anthropic error: ${response.status}` };
   }
-  const data = await response.json();
+  const data = response.json;
   return { content: (_c = (_b = (_a = data.content) == null ? void 0 : _a[0]) == null ? void 0 : _b.text) != null ? _c : "" };
 }
 async function callOpenAICompatible(prompt, systemPrompt, settings) {
@@ -2451,7 +2452,8 @@ async function callOpenAICompatible(prompt, systemPrompt, settings) {
   } else if (settings.provider === "custom" && settings.customBaseUrl) {
     baseUrl = settings.customBaseUrl.replace(/\/$/, "");
   }
-  const response = await fetch(`${baseUrl}/chat/completions`, {
+  const response = await (0, import_obsidian2.requestUrl)({
+    url: `${baseUrl}/chat/completions`,
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -2466,11 +2468,10 @@ async function callOpenAICompatible(prompt, systemPrompt, settings) {
       ]
     })
   });
-  if (!response.ok) {
-    const err = await response.text();
-    return { content: "", error: `API error: ${response.status} \u2014 ${err}` };
+  if (response.status !== 200) {
+    return { content: "", error: `API error: ${response.status}` };
   }
-  const data = await response.json();
+  const data = response.json;
   return { content: (_d = (_c = (_b = (_a = data.choices) == null ? void 0 : _a[0]) == null ? void 0 : _b.message) == null ? void 0 : _c.content) != null ? _d : "" };
 }
 
@@ -2647,19 +2648,22 @@ var MODES = [
     description: "Personal growth, values in action, and an invitation forward."
   }
 ];
-var AnalysisModal = class extends import_obsidian2.Modal {
+var AnalysisModal = class extends import_obsidian3.Modal {
   constructor(app, plugin) {
     super(app);
     this.selectedMode = "weekly-reflection";
     this.isLoading = false;
     this.plugin = plugin;
+    this.component = new import_obsidian3.Component();
   }
   onOpen() {
+    this.component.load();
     const { contentEl } = this;
     contentEl.empty();
     this.renderSelector();
   }
   onClose() {
+    this.component.unload();
     const { contentEl } = this;
     contentEl.empty();
   }
@@ -2697,8 +2701,8 @@ var AnalysisModal = class extends import_obsidian2.Modal {
       text: "Run Analysis",
       cls: "mod-cta"
     });
-    runBtn.addEventListener("click", async () => {
-      await this.runAnalysis();
+    runBtn.addEventListener("click", () => {
+      void this.runAnalysis();
     });
   }
   async runAnalysis() {
@@ -2738,20 +2742,20 @@ var AnalysisModal = class extends import_obsidian2.Modal {
       cls: "setting-item-description"
     });
     const resultContainer = contentEl.createDiv({ cls: "aj-result" });
-    import_obsidian2.MarkdownRenderer.render(
+    void import_obsidian3.MarkdownRenderer.render(
       this.app,
       output,
       resultContainer,
       "",
-      new import_obsidian2.Component()
+      this.component
     );
     const btnRow = contentEl.createDiv({ cls: "aj-btn-row" });
     const saveBtn = btnRow.createEl("button", {
       text: "Save to vault",
       cls: "mod-cta"
     });
-    saveBtn.addEventListener("click", async () => {
-      await this.saveResultToVault(output);
+    saveBtn.addEventListener("click", () => {
+      void this.saveResultToVault(output);
     });
     const backBtn = btnRow.createEl("button", { text: "\u2190 New analysis" });
     backBtn.addEventListener("click", () => this.renderSelector());
@@ -2767,15 +2771,15 @@ var AnalysisModal = class extends import_obsidian2.Modal {
     const fullContent = header + output;
     try {
       await this.app.vault.create(fileName, fullContent);
-      new import_obsidian2.Notice(`Saved: ${fileName}`);
+      new import_obsidian3.Notice(`Saved: ${fileName}`);
     } catch (e) {
-      new import_obsidian2.Notice("Could not save file. A file with this name may already exist.");
+      new import_obsidian3.Notice("Could not save file. A file with this name may already exist.");
     }
   }
 };
 
 // src/main.ts
-var AIJournalCoachPlugin = class extends import_obsidian3.Plugin {
+var AIJournalCoachPlugin = class extends import_obsidian4.Plugin {
   async onload() {
     await this.loadSettings();
     this.addSettingTab(new AIJournalCoachSettingTab(this.app, this));
@@ -2784,7 +2788,7 @@ var AIJournalCoachPlugin = class extends import_obsidian3.Plugin {
     });
     this.addCommand({
       id: "open-journal-coach",
-      name: "Open AI Journal Coach",
+      name: "Open",
       callback: () => {
         new AnalysisModal(this.app, this).open();
       }

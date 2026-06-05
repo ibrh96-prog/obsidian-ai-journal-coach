@@ -1,3 +1,4 @@
+import { requestUrl } from "obsidian";
 import { AIJournalCoachSettings } from "./settings";
 
 export interface LLMResponse {
@@ -30,7 +31,8 @@ async function callAnthropic(
 	systemPrompt: string,
 	settings: AIJournalCoachSettings
 ): Promise<LLMResponse> {
-	const response = await fetch("https://api.anthropic.com/v1/messages", {
+	const response = await requestUrl({
+		url: "https://api.anthropic.com/v1/messages",
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -45,12 +47,13 @@ async function callAnthropic(
 		}),
 	});
 
-	if (!response.ok) {
-		const err = await response.text();
-		return { content: "", error: `Anthropic error: ${response.status} — ${err}` };
+	if (response.status !== 200) {
+		return { content: "", error: `Anthropic error: ${response.status}` };
 	}
 
-	const data = await response.json();
+	const data = response.json as {
+		content?: { text?: string }[];
+	};
 	return { content: data.content?.[0]?.text ?? "" };
 }
 
@@ -67,7 +70,8 @@ async function callOpenAICompatible(
 		baseUrl = settings.customBaseUrl.replace(/\/$/, "");
 	}
 
-	const response = await fetch(`${baseUrl}/chat/completions`, {
+	const response = await requestUrl({
+		url: `${baseUrl}/chat/completions`,
 		method: "POST",
 		headers: {
 			"Content-Type": "application/json",
@@ -83,11 +87,12 @@ async function callOpenAICompatible(
 		}),
 	});
 
-	if (!response.ok) {
-		const err = await response.text();
-		return { content: "", error: `API error: ${response.status} — ${err}` };
+	if (response.status !== 200) {
+		return { content: "", error: `API error: ${response.status}` };
 	}
 
-	const data = await response.json();
+	const data = response.json as {
+		choices?: { message?: { content?: string } }[];
+	};
 	return { content: data.choices?.[0]?.message?.content ?? "" };
 }
