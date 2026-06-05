@@ -1,6 +1,7 @@
 import { App, PluginSettingTab, Setting, Notice } from "obsidian";
 import AIJournalCoachPlugin from "./main";
 import { AIJournalCoachSettings } from "./settings";
+import { validateLicense } from "./licenseManager";
 
 export class AIJournalCoachSettingTab extends PluginSettingTab {
 	plugin: AIJournalCoachPlugin;
@@ -16,7 +17,7 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 
 		containerEl.createEl("h2", { text: "AI Journal Coach" });
 
-		// --- Journal Folder ---
+		// --- Journal Settings ---
 		containerEl.createEl("h3", { text: "Journal Settings" });
 
 		new Setting(containerEl)
@@ -48,7 +49,7 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 					})
 			);
 
-		// --- Provider ---
+		// --- AI Provider ---
 		containerEl.createEl("h3", { text: "AI Provider" });
 
 		new Setting(containerEl)
@@ -112,7 +113,7 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 				);
 		}
 
-		// --- License ---
+		// --- Pro License ---
 		containerEl.createEl("h3", { text: "Pro License" });
 
 		new Setting(containerEl)
@@ -120,7 +121,7 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 			.setDesc("Enter your Pro license key to unlock unlimited usage.")
 			.addText((text) =>
 				text
-					.setPlaceholder("XXXX-XXXX-XXXX-XXXX")
+					.setPlaceholder("Paste your license key here")
 					.setValue(this.plugin.settings.licenseKey)
 					.onChange(async (value) => {
 						this.plugin.settings.licenseKey = value.trim();
@@ -132,11 +133,21 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 					.setButtonText("Activate")
 					.setCta()
 					.onClick(async () => {
-						new Notice("License activation coming soon.");
+						const result = validateLicense(this.plugin.settings.licenseKey);
+						if (result.valid) {
+							this.plugin.settings.isProActivated = true;
+							await this.plugin.saveSettings();
+							new Notice("✅ Pro license activated! Unlimited usage unlocked.");
+							this.display();
+						} else {
+							this.plugin.settings.isProActivated = false;
+							await this.plugin.saveSettings();
+							new Notice("❌ Invalid license key: " + result.reason);
+						}
 					})
 			);
 
-		// --- Status ---
+		// --- Usage Status ---
 		containerEl.createEl("h3", { text: "Usage" });
 
 		const status = this.plugin.settings.isProActivated
