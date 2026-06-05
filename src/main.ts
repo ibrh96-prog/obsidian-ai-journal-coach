@@ -6,7 +6,7 @@ import { AnalysisModal } from "./analysisModal";
 export default class AIJournalCoachPlugin extends Plugin {
 	settings: AIJournalCoachSettings;
 
-	async onload() {
+	override async onload(): Promise<void> {
 		await this.loadSettings();
 
 		this.addSettingTab(new AIJournalCoachSettingTab(this.app, this));
@@ -26,15 +26,15 @@ export default class AIJournalCoachPlugin extends Plugin {
 		console.log("AI Journal Coach loaded.");
 	}
 
-	async onunload() {
+	override onunload(): void {
 		console.log("AI Journal Coach unloaded.");
 	}
 
-	async loadSettings() {
-		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+	async loadSettings(): Promise<void> {
+		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData()) as AIJournalCoachSettings;
 	}
 
-	async saveSettings() {
+	async saveSettings(): Promise<void> {
 		await this.saveData(this.settings);
 	}
 }

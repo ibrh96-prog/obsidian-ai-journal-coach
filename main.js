@@ -2333,7 +2333,6 @@ var AIJournalCoachSettingTab = class extends import_obsidian.PluginSettingTab {
   display() {
     const { containerEl } = this;
     containerEl.empty();
-    new import_obsidian.Setting(containerEl).setName("General").setHeading();
     new import_obsidian.Setting(containerEl).setName("Journal").setHeading();
     new import_obsidian.Setting(containerEl).setName("Journal folder").setDesc("Folder containing your journal notes. Leave empty to search entire vault.").addText(
       (text) => text.setPlaceholder("e.g. Journal or Daily Notes").setValue(this.plugin.settings.journalFolder).onChange(async (value) => {
@@ -2795,7 +2794,7 @@ var AIJournalCoachPlugin = class extends import_obsidian4.Plugin {
     });
     console.log("AI Journal Coach loaded.");
   }
-  async onunload() {
+  onunload() {
     console.log("AI Journal Coach unloaded.");
   }
   async loadSettings() {

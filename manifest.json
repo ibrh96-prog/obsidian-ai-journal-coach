@@ -1,7 +1,7 @@
 {
   "id": "ai-journal-coach",
   "name": "AI Journal Coach",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "minAppVersion": "1.4.0",
   "description": "Analyze your journal notes with AI to surface patterns, insights, and reflections.",
   "author": "Ibrahim Edhem Harbutlu",

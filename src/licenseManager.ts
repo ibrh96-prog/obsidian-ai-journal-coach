@@ -8,27 +8,33 @@ export interface LicenseValidationResult {
 	email?: string;
 }
 
+interface LicenseBundle {
+	p: string;
+	s: string;
+}
+
+interface LicensePayload {
+	email: string;
+	product: string;
+	version: number;
+	issuedAt: string;
+}
+
 export function validateLicense(licenseKey: string): LicenseValidationResult {
 	if (!licenseKey || licenseKey.trim().length === 0) {
 		return { valid: false, reason: "No license key provided." };
 	}
 
 	try {
-		// Decode outer base64
 		const bundleJson = atob(licenseKey.trim());
-		const bundle = JSON.parse(bundleJson);
+		const bundle = JSON.parse(bundleJson) as LicenseBundle;
 
 		if (!bundle.p || !bundle.s) {
 			return { valid: false, reason: "Invalid license key format." };
 		}
 
-		// Decode signature
 		const signatureBytes = base64ToBytes(bundle.s);
-
-		// Encode payload
 		const messageBytes = new TextEncoder().encode(bundle.p);
-
-		// Verify signature
 		const publicKey = hexToBytes(PUBLIC_KEY_HEX);
 		const valid = nacl.sign.detached.verify(messageBytes, signatureBytes, publicKey);
 
@@ -36,8 +42,7 @@ export function validateLicense(licenseKey: string): LicenseValidationResult {
 			return { valid: false, reason: "License key signature is invalid." };
 		}
 
-		// Parse payload
-		const payload = JSON.parse(bundle.p);
+		const payload = JSON.parse(bundle.p) as LicensePayload;
 
 		if (payload.product !== "ai-journal-coach") {
 			return { valid: false, reason: "This license key is for a different product." };
