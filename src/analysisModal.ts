@@ -1,6 +1,7 @@
 import { App, Modal, Notice, MarkdownRenderer, Component } from "obsidian";
 import AIJournalCoachPlugin from "./main";
 import { runAnalysis, AnalysisMode } from "./journalAnalyzer";
+import { GUMROAD_URL } from "./licenseManager";
 
 const MODES: { value: AnalysisMode; label: string; description: string }[] = [
 	{
@@ -60,6 +61,17 @@ export class AnalysisModal extends Modal {
 			? "Pro — unlimited analyses"
 			: `Free tier — ${this.plugin.settings.usageCount} / 3 uses this month`;
 		contentEl.createEl("p", { text: sub, cls: "setting-item-description" });
+
+		if (!this.plugin.settings.isProActivated) {
+			contentEl.createEl("p", {
+				text: "Upgrade to Pro — Unlimited analyses, one-time payment, no subscription. Free tier limits are getting stricter soon — lock in early access now with code gcw63tz (valid 1 month).",
+				cls: "setting-item-description",
+			});
+			const upgradeBtn = contentEl.createEl("button", { text: "Get Pro license" });
+			upgradeBtn.addEventListener("click", () => {
+				window.open(GUMROAD_URL, "_blank");
+			});
+		}
 
 		contentEl.createEl("h3", { text: "Select analysis type" });
 

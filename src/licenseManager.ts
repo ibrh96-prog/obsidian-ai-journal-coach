@@ -2,6 +2,8 @@ import nacl from "tweetnacl";
 
 const PUBLIC_KEY_HEX = "83fc4f57a82abdf38610f22b0b1021230ec2fcc6d418182db557329b060e821c";
 
+export const GUMROAD_URL = "https://ibrh96.gumroad.com/l/hujko";
+
 export interface LicenseValidationResult {
 	valid: boolean;
 	reason?: string;

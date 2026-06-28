@@ -2282,6 +2282,7 @@ var import_obsidian = require("obsidian");
 // src/licenseManager.ts
 var import_tweetnacl = __toESM(require_nacl_fast());
 var PUBLIC_KEY_HEX = "83fc4f57a82abdf38610f22b0b1021230ec2fcc6d418182db557329b060e821c";
+var GUMROAD_URL = "https://ibrh96.gumroad.com/l/hujko";
 function validateLicense(licenseKey) {
   if (!licenseKey || licenseKey.trim().length === 0) {
     return { valid: false, reason: "No license key provided." };
@@ -2398,6 +2399,13 @@ var AIJournalCoachSettingTab = class extends import_obsidian.PluginSettingTab {
     new import_obsidian.Setting(containerEl).setName("Usage").setHeading();
     const status = this.plugin.settings.isProActivated ? "\u2705 Pro activated \u2014 unlimited usage" : `Free tier \u2014 ${this.plugin.settings.usageCount} / 3 uses this month`;
     new import_obsidian.Setting(containerEl).setName(status);
+    if (!this.plugin.settings.isProActivated) {
+      new import_obsidian.Setting(containerEl).setName("Upgrade to Pro").setDesc("Unlimited analyses, one-time payment, no subscription. Free tier limits are getting stricter soon \u2014 lock in early access now with code gcw63tz (valid 1 month).").addButton((button) => {
+        button.setButtonText("Get Pro license").onClick(() => {
+          window.open(GUMROAD_URL, "_blank");
+        });
+      });
+    }
   }
 };
 
@@ -2672,6 +2680,16 @@ var AnalysisModal = class extends import_obsidian3.Modal {
     contentEl.createEl("h2", { text: "AI Journal Coach" });
     const sub = this.plugin.settings.isProActivated ? "Pro \u2014 unlimited analyses" : `Free tier \u2014 ${this.plugin.settings.usageCount} / 3 uses this month`;
     contentEl.createEl("p", { text: sub, cls: "setting-item-description" });
+    if (!this.plugin.settings.isProActivated) {
+      contentEl.createEl("p", {
+        text: "Upgrade to Pro \u2014 Unlimited analyses, one-time payment, no subscription. Free tier limits are getting stricter soon \u2014 lock in early access now with code gcw63tz (valid 1 month).",
+        cls: "setting-item-description"
+      });
+      const upgradeBtn = contentEl.createEl("button", { text: "Get Pro license" });
+      upgradeBtn.addEventListener("click", () => {
+        window.open(GUMROAD_URL, "_blank");
+      });
+    }
     contentEl.createEl("h3", { text: "Select analysis type" });
     const modeContainer = contentEl.createDiv({ cls: "aj-mode-container" });
     MODES.forEach((mode) => {

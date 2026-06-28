@@ -1,7 +1,7 @@
 import { App, PluginSettingTab, Setting, Notice } from "obsidian";
 import AIJournalCoachPlugin from "./main";
 import { AIJournalCoachSettings } from "./settings";
-import { validateLicense } from "./licenseManager";
+import { validateLicense, GUMROAD_URL } from "./licenseManager";
 
 export class AIJournalCoachSettingTab extends PluginSettingTab {
 	plugin: AIJournalCoachPlugin;
@@ -154,5 +154,18 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 			: `Free tier — ${this.plugin.settings.usageCount} / 3 uses this month`;
 
 		new Setting(containerEl).setName(status);
+
+		if (!this.plugin.settings.isProActivated) {
+			new Setting(containerEl)
+				.setName("Upgrade to Pro")
+				.setDesc("Unlimited analyses, one-time payment, no subscription. Free tier limits are getting stricter soon — lock in early access now with code gcw63tz (valid 1 month).")
+				.addButton((button) => {
+					button
+						.setButtonText("Get Pro license")
+						.onClick(() => {
+							window.open(GUMROAD_URL, "_blank");
+						});
+				});
+		}
 	}
 }
