@@ -2271,7 +2271,6 @@ var DEFAULT_SETTINGS = {
   licenseKey: "",
   isProActivated: false,
   usageCount: 0,
-  usageResetMonth: (/* @__PURE__ */ new Date()).getMonth(),
   journalFolder: "",
   daysBack: 7
 };
@@ -2397,10 +2396,10 @@ var AIJournalCoachSettingTab = class extends import_obsidian.PluginSettingTab {
       })
     );
     new import_obsidian.Setting(containerEl).setName("Usage").setHeading();
-    const status = this.plugin.settings.isProActivated ? "\u2705 Pro activated \u2014 unlimited usage" : `Free tier \u2014 ${this.plugin.settings.usageCount} / 3 uses this month`;
+    const status = this.plugin.settings.isProActivated ? "\u2705 Pro activated \u2014 unlimited usage" : `Free tier \u2014 ${this.plugin.settings.usageCount} / 10 uses`;
     new import_obsidian.Setting(containerEl).setName(status);
     if (!this.plugin.settings.isProActivated) {
-      new import_obsidian.Setting(containerEl).setName("Upgrade to Pro").setDesc("Unlimited analyses, one-time payment, no subscription. Free tier limits are getting stricter soon \u2014 lock in early access now with code gcw63tz (valid 1 month).").addButton((button) => {
+      new import_obsidian.Setting(containerEl).setName("Upgrade to Pro").setDesc("Unlimited analyses, one-time payment, no subscription.").addButton((button) => {
         button.setButtonText("Get Pro license").onClick(() => {
           window.open(GUMROAD_URL, "_blank");
         });
@@ -2513,32 +2512,27 @@ ${note.content}`).join("\n\n---\n\n");
 }
 
 // src/usageManager.ts
-var FREE_TIER_LIMIT = 3;
+var FREE_TIER_LIMIT = 10;
 function checkUsageLimit(settings) {
   if (settings.isProActivated) {
     return { allowed: true, remaining: Infinity };
-  }
-  const currentMonth = (/* @__PURE__ */ new Date()).getMonth();
-  if (settings.usageResetMonth !== currentMonth) {
-    return { allowed: true, remaining: FREE_TIER_LIMIT };
   }
   const remaining = FREE_TIER_LIMIT - settings.usageCount;
   if (remaining <= 0) {
     return {
       allowed: false,
       remaining: 0,
-      reason: `You have used all ${FREE_TIER_LIMIT} free analyses this month. Upgrade to Pro for unlimited usage.`
+      reason: `You have used all ${FREE_TIER_LIMIT} free analyses. Upgrade to Pro for unlimited usage.`
     };
   }
   return { allowed: true, remaining };
 }
 async function incrementUsage(settings, saveSettings) {
-  const currentMonth = (/* @__PURE__ */ new Date()).getMonth();
-  if (settings.usageResetMonth !== currentMonth) {
-    settings.usageCount = 0;
-    settings.usageResetMonth = currentMonth;
-  }
   settings.usageCount += 1;
+  await saveSettings();
+}
+async function decrementUsage(settings, saveSettings) {
+  settings.usageCount = Math.max(0, settings.usageCount - 1);
   await saveSettings();
 }
 
@@ -2609,27 +2603,39 @@ async function runAnalysis(app, settings, saveSettings, mode, folderPath, daysBa
       noteCount: 0
     };
   }
-  const notes = await collectJournalNotes(app, folderPath, daysBack);
-  if (notes.length === 0) {
+  await incrementUsage(settings, saveSettings);
+  try {
+    const notes = await collectJournalNotes(app, folderPath, daysBack);
+    if (notes.length === 0) {
+      await decrementUsage(settings, saveSettings);
+      return {
+        mode,
+        output: "",
+        error: `No journal entries found in the past ${daysBack} days. Make sure your journal folder path is set correctly in settings.`,
+        noteCount: 0
+      };
+    }
+    const formatted = formatNotesForPrompt(notes);
+    const prompt = MODE_PROMPTS[mode](formatted, daysBack);
+    const response = await callLLM(prompt, SYSTEM_PROMPT, settings);
+    if (response.error) {
+      await decrementUsage(settings, saveSettings);
+      return { mode, output: "", error: response.error, noteCount: notes.length };
+    }
+    return {
+      mode,
+      output: response.content,
+      noteCount: notes.length
+    };
+  } catch (error) {
+    await decrementUsage(settings, saveSettings);
     return {
       mode,
       output: "",
-      error: `No journal entries found in the past ${daysBack} days. Make sure your journal folder path is set correctly in settings.`,
+      error: error instanceof Error ? error.message : "Unknown error during analysis.",
       noteCount: 0
     };
   }
-  const formatted = formatNotesForPrompt(notes);
-  const prompt = MODE_PROMPTS[mode](formatted, daysBack);
-  const response = await callLLM(prompt, SYSTEM_PROMPT, settings);
-  if (response.error) {
-    return { mode, output: "", error: response.error, noteCount: notes.length };
-  }
-  await incrementUsage(settings, saveSettings);
-  return {
-    mode,
-    output: response.content,
-    noteCount: notes.length
-  };
 }
 
 // src/analysisModal.ts
@@ -2678,11 +2684,11 @@ var AnalysisModal = class extends import_obsidian3.Modal {
     const { contentEl } = this;
     contentEl.empty();
     contentEl.createEl("h2", { text: "AI Journal Coach" });
-    const sub = this.plugin.settings.isProActivated ? "Pro \u2014 unlimited analyses" : `Free tier \u2014 ${this.plugin.settings.usageCount} / 3 uses this month`;
+    const sub = this.plugin.settings.isProActivated ? "Pro \u2014 unlimited analyses" : `Free tier \u2014 ${this.plugin.settings.usageCount} / 10 uses`;
     contentEl.createEl("p", { text: sub, cls: "setting-item-description" });
     if (!this.plugin.settings.isProActivated) {
       contentEl.createEl("p", {
-        text: "Upgrade to Pro \u2014 Unlimited analyses, one-time payment, no subscription. Free tier limits are getting stricter soon \u2014 lock in early access now with code gcw63tz (valid 1 month).",
+        text: "Upgrade to Pro \u2014 Unlimited analyses, one-time payment, no subscription.",
         cls: "setting-item-description"
       });
       const upgradeBtn = contentEl.createEl("button", { text: "Get Pro license" });
@@ -2724,31 +2730,40 @@ var AnalysisModal = class extends import_obsidian3.Modal {
   }
   async runAnalysis() {
     if (this.isLoading) return;
+    if (this.plugin.isAnalysisInProgress) {
+      new import_obsidian3.Notice("An analysis is already in progress. Please wait for it to finish.");
+      return;
+    }
     this.isLoading = true;
+    this.plugin.isAnalysisInProgress = true;
     const { contentEl } = this;
     contentEl.empty();
     contentEl.createEl("h2", { text: "AI Journal Coach" });
     contentEl.createEl("p", { text: "Analyzing your journal entries...", cls: "setting-item-description" });
     const spinner = contentEl.createDiv({ cls: "aj-spinner" });
     spinner.setText("\u23F3 Please wait...");
-    const result = await runAnalysis(
-      this.app,
-      this.plugin.settings,
-      this.plugin.saveSettings.bind(this.plugin),
-      this.selectedMode,
-      this.plugin.settings.journalFolder,
-      this.plugin.settings.daysBack
-    );
-    this.isLoading = false;
-    if (result.error) {
-      contentEl.empty();
-      contentEl.createEl("h2", { text: "AI Journal Coach" });
-      contentEl.createEl("p", { text: "\u274C " + result.error });
-      const backBtn = contentEl.createEl("button", { text: "\u2190 Back" });
-      backBtn.addEventListener("click", () => this.renderSelector());
-      return;
+    try {
+      const result = await runAnalysis(
+        this.app,
+        this.plugin.settings,
+        this.plugin.saveSettings.bind(this.plugin),
+        this.selectedMode,
+        this.plugin.settings.journalFolder,
+        this.plugin.settings.daysBack
+      );
+      if (result.error) {
+        contentEl.empty();
+        contentEl.createEl("h2", { text: "AI Journal Coach" });
+        contentEl.createEl("p", { text: "\u274C " + result.error });
+        const backBtn = contentEl.createEl("button", { text: "\u2190 Back" });
+        backBtn.addEventListener("click", () => this.renderSelector());
+        return;
+      }
+      this.renderResult(result.output, result.noteCount);
+    } finally {
+      this.isLoading = false;
+      this.plugin.isAnalysisInProgress = false;
     }
-    this.renderResult(result.output, result.noteCount);
   }
   renderResult(output, noteCount) {
     const { contentEl } = this;
@@ -2797,6 +2812,10 @@ var AnalysisModal = class extends import_obsidian3.Modal {
 
 // src/main.ts
 var AIJournalCoachPlugin = class extends import_obsidian4.Plugin {
+  constructor() {
+    super(...arguments);
+    this.isAnalysisInProgress = false;
+  }
   async onload() {
     await this.loadSettings();
     this.addSettingTab(new AIJournalCoachSettingTab(this.app, this));

@@ -2,7 +2,7 @@ import { App } from "obsidian";
 import { AIJournalCoachSettings } from "./settings";
 import { callLLM } from "./llmAdapter";
 import { collectJournalNotes, formatNotesForPrompt } from "./noteCollector";
-import { checkUsageLimit, incrementUsage } from "./usageManager";
+import { checkUsageLimit, incrementUsage, decrementUsage } from "./usageManager";
 
 export type AnalysisMode =
 	| "weekly-reflection"
@@ -94,32 +94,45 @@ export async function runAnalysis(
 		};
 	}
 
-	// Collect notes
-	const notes = await collectJournalNotes(app, folderPath, daysBack);
-	if (notes.length === 0) {
+	// Reserve usage immediately, before the analysis runs, so concurrent
+	// requests can't both slip through the check above
+	await incrementUsage(settings, saveSettings);
+
+	try {
+		// Collect notes
+		const notes = await collectJournalNotes(app, folderPath, daysBack);
+		if (notes.length === 0) {
+			await decrementUsage(settings, saveSettings);
+			return {
+				mode,
+				output: "",
+				error: `No journal entries found in the past ${daysBack} days. Make sure your journal folder path is set correctly in settings.`,
+				noteCount: 0,
+			};
+		}
+
+		const formatted = formatNotesForPrompt(notes);
+		const prompt = MODE_PROMPTS[mode](formatted, daysBack);
+
+		// Call LLM
+		const response = await callLLM(prompt, SYSTEM_PROMPT, settings);
+		if (response.error) {
+			await decrementUsage(settings, saveSettings);
+			return { mode, output: "", error: response.error, noteCount: notes.length };
+		}
+
+		return {
+			mode,
+			output: response.content,
+			noteCount: notes.length,
+		};
+	} catch (error) {
+		await decrementUsage(settings, saveSettings);
 		return {
 			mode,
 			output: "",
-			error: `No journal entries found in the past ${daysBack} days. Make sure your journal folder path is set correctly in settings.`,
+			error: error instanceof Error ? error.message : "Unknown error during analysis.",
 			noteCount: 0,
 		};
 	}
-
-	const formatted = formatNotesForPrompt(notes);
-	const prompt = MODE_PROMPTS[mode](formatted, daysBack);
-
-	// Call LLM
-	const response = await callLLM(prompt, SYSTEM_PROMPT, settings);
-	if (response.error) {
-		return { mode, output: "", error: response.error, noteCount: notes.length };
-	}
-
-	// Increment usage
-	await incrementUsage(settings, saveSettings);
-
-	return {
-		mode,
-		output: response.content,
-		noteCount: notes.length,
-	};
 }

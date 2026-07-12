@@ -151,14 +151,14 @@ export class AIJournalCoachSettingTab extends PluginSettingTab {
 
 		const status = this.plugin.settings.isProActivated
 			? "✅ Pro activated — unlimited usage"
-			: `Free tier — ${this.plugin.settings.usageCount} / 3 uses this month`;
+			: `Free tier — ${this.plugin.settings.usageCount} / 10 uses`;
 
 		new Setting(containerEl).setName(status);
 
 		if (!this.plugin.settings.isProActivated) {
 			new Setting(containerEl)
 				.setName("Upgrade to Pro")
-				.setDesc("Unlimited analyses, one-time payment, no subscription. Free tier limits are getting stricter soon — lock in early access now with code gcw63tz (valid 1 month).")
+				.setDesc("Unlimited analyses, one-time payment, no subscription.")
 				.addButton((button) => {
 					button
 						.setButtonText("Get Pro license")

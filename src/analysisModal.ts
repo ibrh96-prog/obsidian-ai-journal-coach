@@ -59,12 +59,12 @@ export class AnalysisModal extends Modal {
 
 		const sub = this.plugin.settings.isProActivated
 			? "Pro — unlimited analyses"
-			: `Free tier — ${this.plugin.settings.usageCount} / 3 uses this month`;
+			: `Free tier — ${this.plugin.settings.usageCount} / 10 uses`;
 		contentEl.createEl("p", { text: sub, cls: "setting-item-description" });
 
 		if (!this.plugin.settings.isProActivated) {
 			contentEl.createEl("p", {
-				text: "Upgrade to Pro — Unlimited analyses, one-time payment, no subscription. Free tier limits are getting stricter soon — lock in early access now with code gcw63tz (valid 1 month).",
+				text: "Upgrade to Pro — Unlimited analyses, one-time payment, no subscription.",
 				cls: "setting-item-description",
 			});
 			const upgradeBtn = contentEl.createEl("button", { text: "Get Pro license" });
@@ -116,7 +116,14 @@ export class AnalysisModal extends Modal {
 
 	async runAnalysis() {
 		if (this.isLoading) return;
+
+		if (this.plugin.isAnalysisInProgress) {
+			new Notice("An analysis is already in progress. Please wait for it to finish.");
+			return;
+		}
+
 		this.isLoading = true;
+		this.plugin.isAnalysisInProgress = true;
 
 		const { contentEl } = this;
 		contentEl.empty();
@@ -127,28 +134,31 @@ export class AnalysisModal extends Modal {
 		const spinner = contentEl.createDiv({ cls: "aj-spinner" });
 		spinner.setText("⏳ Please wait...");
 
-		const result = await runAnalysis(
-			this.app,
-			this.plugin.settings,
-			this.plugin.saveSettings.bind(this.plugin),
-			this.selectedMode,
-			this.plugin.settings.journalFolder,
-			this.plugin.settings.daysBack
-		);
+		try {
+			const result = await runAnalysis(
+				this.app,
+				this.plugin.settings,
+				this.plugin.saveSettings.bind(this.plugin),
+				this.selectedMode,
+				this.plugin.settings.journalFolder,
+				this.plugin.settings.daysBack
+			);
 
-		this.isLoading = false;
+			if (result.error) {
+				contentEl.empty();
+				contentEl.createEl("h2", { text: "AI Journal Coach" });
+				contentEl.createEl("p", { text: "❌ " + result.error });
 
-		if (result.error) {
-			contentEl.empty();
-			contentEl.createEl("h2", { text: "AI Journal Coach" });
-			contentEl.createEl("p", { text: "❌ " + result.error });
+				const backBtn = contentEl.createEl("button", { text: "← Back" });
+				backBtn.addEventListener("click", () => this.renderSelector());
+				return;
+			}
 
-			const backBtn = contentEl.createEl("button", { text: "← Back" });
-			backBtn.addEventListener("click", () => this.renderSelector());
-			return;
+			this.renderResult(result.output, result.noteCount);
+		} finally {
+			this.isLoading = false;
+			this.plugin.isAnalysisInProgress = false;
 		}
-
-		this.renderResult(result.output, result.noteCount);
 	}
 
 	renderResult(output: string, noteCount: number) {

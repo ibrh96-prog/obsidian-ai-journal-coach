@@ -5,6 +5,7 @@ import { AnalysisModal } from "./analysisModal";
 
 export default class AIJournalCoachPlugin extends Plugin {
 	settings: AIJournalCoachSettings;
+	isAnalysisInProgress = false;
 
 	override async onload(): Promise<void> {
 		await this.loadSettings();

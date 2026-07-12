@@ -6,7 +6,6 @@ export interface AIJournalCoachSettings {
 	licenseKey: string;
 	isProActivated: boolean;
 	usageCount: number;
-	usageResetMonth: number;
 	journalFolder: string;
 	daysBack: number;
 }
@@ -19,7 +18,6 @@ export const DEFAULT_SETTINGS: AIJournalCoachSettings = {
 	licenseKey: "",
 	isProActivated: false,
 	usageCount: 0,
-	usageResetMonth: new Date().getMonth(),
 	journalFolder: "",
 	daysBack: 7,
 };
