@@ -24,7 +24,9 @@ Your API key is stored locally in Obsidian's data storage on your device. It is 
 
 ## 6. Refunds
 
-Refund requests within 30 days of purchase will be honored if the Plugin does not function as described. Contact: support via Gumroad.
+Refund eligibility and processing are governed by the refund policy displayed on the Gumroad product page at the time of purchase, Gumroad's applicable policies, and applicable mandatory law.
+
+This EULA does not provide an independent 30-day money-back guarantee.
 
 ## 7. Disclaimer
 
