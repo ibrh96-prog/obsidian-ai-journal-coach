@@ -37,12 +37,18 @@ An Obsidian plugin that analyzes your journal notes with AI to surface patterns,
 
 | Feature | Free | Pro |
 |---|---|---|
-| Analyses per month | 3 | Unlimited |
+| Analyses | 10 total (lifetime) | Unlimited |
 | All analysis modes | ✅ | ✅ |
 | All AI providers | ✅ | ✅ |
 | Save to vault | ✅ | ✅ |
 
-Upgrade to Pro at [ibrh96.gumroad.com/l/hujko](https://ibrh96.gumroad.com/l/hujko).
+The free tier allows 10 analyses in total. **This is a one-time lifetime allowance — it does not reset monthly.** An analysis that fails does not consume one of your free uses: the use is reserved before the request and refunded if the analysis does not complete.
+
+The free allowance is stored in this vault's local plugin data. Each vault has its own allowance. Removing the plugin's local data may reset the recorded usage. There is no account and no server-side record of your usage.
+
+Pro is a one-time purchase that removes the limit — no subscription, and no account. Your license key is verified offline on your own machine; activation never requires network access. Upgrade at [ibrh96.gumroad.com/l/hujko](https://ibrh96.gumroad.com/l/hujko).
+
+Pro covers the plugin only. AI provider usage is billed separately by the provider whose API key you configure.
 
 ## Privacy
 
@@ -52,4 +58,6 @@ Upgrade to Pro at [ibrh96.gumroad.com/l/hujko](https://ibrh96.gumroad.com/l/hujk
 
 ## License
 
-See [EULA.md](EULA.md) for terms of use.
+The source code in this repository is licensed under the **MIT License** — see [LICENSE](LICENSE).
+
+Terms relating to the official Pro purchase — activation, license keys, refunds, warranty, and support — are set out in [EULA.md](EULA.md).
