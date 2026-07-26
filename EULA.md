@@ -10,12 +10,9 @@ By purchasing, downloading, or using AI Journal Coach ("the Plugin"), you agree 
 
 Upon purchase of a Pro license, you receive a personal, non-transferable, non-exclusive license to use the Plugin on any devices you own. Free tier usage requires no purchase.
 
-## 3. Restrictions
+## 3. License key
 
-You may not:
-- Resell, sublicense, or redistribute the Plugin or any license key
-- Reverse engineer the license verification system
-- Share your license key with others
+Your Pro license is activated by an offline license key issued with your purchase and verified locally on your own device. You may use your key on the devices you personally own or control. You may not sell, share, sublicense, distribute, or publish your license key. Distributing or publishing a license key voids that license without refund.
 
 ## 4. Privacy
 
