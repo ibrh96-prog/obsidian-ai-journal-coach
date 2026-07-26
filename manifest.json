@@ -1,11 +1,11 @@
 {
   "id": "ai-journal-coach",
   "name": "AI Journal Coach",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "minAppVersion": "1.4.0",
   "description": "Analyze your journal notes with AI to surface patterns, insights, and reflections.",
   "author": "Ibrahim Edhem Harbutlu",
   "authorUrl": "https://ibrh96.gumroad.com",
   "fundingUrl": "https://ibrh96.gumroad.com",
-  "isDesktopOnly": true
+  "isDesktopOnly": false
 }
